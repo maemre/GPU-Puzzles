@@ -21,23 +21,22 @@
 
 # [NUMBA CUDA Guide](https://numba.readthedocs.io/en/stable/cuda/index.html)
 
-# I recommend doing these in Colab, as it is easy to get started.  Be
-# sure to make your own copy, turn on GPU mode in the settings (`Runtime / Change runtime type`, then set `Hardware accelerator` to `GPU`), and
-# then get to coding.
+# Run locally with `uv run GPU_puzzlers.py`, or open the notebook with
+# `uv run jupyter lab GPU_puzzlers.ipynb`. CUDA kernels run on the CPU
+# using Numba's simulator by default; no GPU or CUDA toolkit is required.
 
 # [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/srush/GPU-Puzzles/blob/main/GPU_puzzlers.ipynb)
 
 # (If you are into this style of puzzle, also check out my [Tensor
 # Puzzles](https://github.com/srush/Tensor-Puzzles) for PyTorch.)
 
-!pip install -qqq git+https://github.com/danoneata/chalk@srush-patch-1
-!wget -q https://github.com/srush/GPU-Puzzles/raw/main/robot.png https://github.com/srush/GPU-Puzzles/raw/main/lib.py
+# Dependencies are managed by uv; use the checked-in lib.py and robot.png.
 
 
+from lib import CudaProblem, Coord  # Enable CPU simulation before importing Numba.
 import numba
 import numpy as np
 import warnings
-from lib import CudaProblem, Coord
 
 warnings.filterwarnings(
     action="ignore", category=numba.NumbaPerformanceWarning, module="numba"

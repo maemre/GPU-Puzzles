@@ -1,3 +1,9 @@
+import os
+from pathlib import Path as FilePath
+
+# Numba must see this before its first import. Set to 0 to use a real GPU.
+os.environ.setdefault("NUMBA_ENABLE_CUDASIM", "1")
+
 from dataclasses import dataclass
 import numpy as np
 from chalk import *
@@ -169,7 +175,8 @@ class Cuda:
 black = Color("black")
 white = Color("white")
 im = image(
-    "robot.png", "https://raw.githubusercontent.com/minitorch/diagrams/main/robot.png"
+    str(FilePath(__file__).with_name("robot.png")),
+    "https://raw.githubusercontent.com/minitorch/diagrams/main/robot.png"
 ).scale_uniform_to_x(1)
 colors = list(Color("red").range_to(Color("blue"), 10))
 
@@ -336,9 +343,15 @@ class CudaProblem:
     spec: Any = None
         
     def run_cuda(self):
-        fn = self.fn
-        fn = fn(numba.cuda)
-        jitfn = numba.cuda.jit(fn)
+        if numba.config.ENABLE_CUDASIM:
+            # The simulator replaces global CUDA references, but cannot replace
+            # the `cuda` closure captured by each puzzle's factory. Build the
+            # puzzle kernel inside the launch so it captures the simulated CUDA.
+            def fn(*args):
+                self.fn(cuda)(*args)
+        else:
+            fn = self.fn(cuda)
+        jitfn = cuda.jit(fn)
         jitfn[self.blockspergrid.tuple(), self.threadsperblock.tuple()](
             self.out, *self.inputs, *self.args
         )
